@@ -1,0 +1,557 @@
+
+import { INITIAL_ROUTES, INITIAL_STUDENTS, INITIAL_LOGS, INITIAL_TICKETS, INITIAL_BUDGET_DATA, RECOMMENDED_HARDWARE, MOCK_TENANTS, MOCK_INVOICES, MOCK_POS, MOCK_QUOTES, INITIAL_PRICING_CONFIG } from '../constants';
+
+export const getProjectFiles = () => {
+    return {
+        'vercel.json': `{
+  "installCommand": "npm install --no-package-lock --force",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite"
+}`,
+        'package.json': `{
+  "name": "ridesmart-app",
+  "private": true,
+  "version": "24.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/genai": "*",
+    "@supabase/supabase-js": "^2.39.0",
+    "lucide-react": "^0.294.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.10.3",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8",
+    "@types/file-saver": "^2.0.7",
+    "@types/node": "^20.10.0"
+  }
+}`,
+        'index.html': `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>TUSD RideSmart</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/index.tsx"></script>
+  </body>
+</html>`,
+        'tsconfig.json': `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}`,
+        'tsconfig.node.json': `{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["vite.config.ts"]
+}`,
+        'vite.config.ts': `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
+})`,
+        'src/index.tsx': `import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("Could not find root element to mount to");
+}
+
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);`,
+        'src/index.css': `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f3f4f6;
+}
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}`,
+        'src/types.ts': `// Exported Types
+export enum BusStatus {
+  ON_ROUTE = 'On Route',
+  IDLE = 'Idle',
+  DELAYED = 'Delayed',
+  MAINTENANCE = 'Maintenance',
+  COMPLETED = 'Completed'
+}
+
+export enum StudentStatus {
+  ON_BUS = 'On Bus',
+  OFF_BUS = 'Off Bus',
+  ABSENT = 'Absent',
+  UNKNOWN = 'Unknown'
+}
+
+export type SubscriptionTier = 'BASIC' | 'PROFESSIONAL' | 'ENTERPRISE';
+
+export type VehicleType = 'Standard Bus' | 'Activity Bus' | 'Shuttle' | 'Wheelchair Van' | 'Electric Bus';
+
+export interface Student {
+  id: string;
+  name: string;
+  grade: number;
+  school: string;
+  rfidTag: string;
+  status: StudentStatus;
+  lastScanTime?: string;
+  lastScanLocation?: string;
+  assignedBusId: string;
+  photoUrl?: string;
+}
+
+export interface BusHealth {
+    status: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+    batteryVoltage: number;
+    tirePressure: number; // PSI
+    oilLevel: number; // percentage
+}
+
+export interface BusRoute {
+  id: string;
+  name: string;
+  driver: string;
+  busNumber: string;
+  status: BusStatus;
+  capacity: number; // Maximum student capacity
+  occupancy: number;
+  nextStop: string;
+  estimatedArrival: string; // HH:MM format
+  coordinates: { x: number; y: number }; // For schematic map (0-100)
+  alert?: string;
+  vehicleType: VehicleType;
+  health?: BusHealth;
+  
+  // Detailed Vehicle Info
+  vin?: string;
+  licensePlate?: string;
+  make?: string;
+  model?: string;
+  year?: number;
+  mileage?: number;
+
+  // Event fields
+  type?: 'STANDARD' | 'FIELD_TRIP' | 'ATHLETICS';
+  destination?: string;
+  eventDate?: string;
+}
+
+export interface MaintenanceTicket {
+  id: string;
+  busId: string;
+  busNumber: string;
+  issue: string;
+  reportedBy: string;
+  reportedAt: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  progress: number;
+  estimatedCompletion: string;
+  notes: string[];
+}
+
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  type: 'BOARDING' | 'DISEMBARKING' | 'ALERT' | 'SYSTEM' | 'WRONG_BUS' | 'MAINTENANCE';
+  message: string;
+  severity: 'info' | 'warning' | 'critical';
+}
+
+export interface AiInsight {
+  title: string;
+  description: string;
+  type: 'optimization' | 'safety' | 'maintenance';
+  confidence: number;
+}
+
+export interface OptimizationInsight {
+  routeId: string;
+  suggestion: string;
+  impact: string;
+  newPathDescription?: string;
+}
+
+export interface RouteOptimizationResponse {
+  overview: string;
+  insights: OptimizationInsight[];
+  estimatedSavings: string;
+}
+
+export interface DeviceGuide {
+  id: string;
+  name: string;
+  category: 'tablet' | 'scanner' | 'connector';
+  description: string;
+  priceRange: string;
+  compatibility: string;
+  imageUrl?: string;
+}
+
+export interface ParentNotification {
+  id: string;
+  topic: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  aiGenerated: boolean;
+}
+
+export interface Tenant {
+  id: string;
+  name: string;
+  contactEmail: string;
+  status: 'ACTIVE' | 'TRIAL' | 'SUSPENDED';
+  studentCount: number;
+  busCount: number;
+  joinedDate: string;
+  logoUrl?: string;
+  databaseSchema: string;
+}
+
+export interface QuoteRequest {
+  id: string;
+  districtName: string;
+  contactName: string;
+  contactRole: string;
+  email: string;
+  studentCount: number;
+  busCount: number;
+  legacyBusCount?: number;
+  tier: SubscriptionTier;
+  amount: number;
+  hardwareCost?: number;
+  status: 'PENDING' | 'REVIEWED' | 'APPROVED';
+  submittedDate: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  districtName: string;
+  contactName: string;
+  email: string;
+  fileName: string;
+  uploadDate: string;
+  status: 'PROCESSING' | 'VERIFIED';
+}
+
+export interface Invoice {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  amount: number;
+  status: 'PAID' | 'OVERDUE' | 'SENT';
+  dueDate: string;
+}
+
+export interface YearlyStats {
+  totalMiles: number;
+  safeTrips: number;
+  onTimeRate: number;
+  fuelSavedGal: number;
+  topDriver: string;
+  topDestination: string;
+}
+export interface PricingConfig {
+    basePrice: number;
+    perBusPrice: number;
+}
+export interface SystemSettings {
+    mapProvider: 'SIMULATED' | 'GOOGLE_MAPS';
+    googleMapsApiKey?: string;
+    supabaseUrl?: string;
+    supabaseKey?: string;
+}
+
+export type BudgetCategory = 
+  | 'Fuel/Gas' 
+  | 'Staff Salaries' 
+  | 'Maintenance' 
+  | 'Leases/Purchases' 
+  | 'Insurance' 
+  | 'Technology' 
+  | 'Facilities';
+
+export interface BudgetEntry {
+  id: string;
+  category: BudgetCategory;
+  description: string;
+  amount: number;
+  date: string;
+  fiscalYear: number;
+}
+
+export interface FinancialInsight {
+  title: string;
+  finding: string;
+  recommendation: string;
+  potentialSavings: number;
+}
+
+export type TelematicsProvider = 'GEOTAB' | 'SAMSARA' | 'ZONAR' | 'NATIVE';
+
+export interface TelematicsConfig {
+  provider: TelematicsProvider;
+  apiKey?: string;
+  refreshRateSeconds: number;
+  isConnected: boolean;
+}
+
+export interface TelemetryData {
+  busId: string;
+  speed: number;
+  rpm: number;
+  fuelLevel: number;
+  odometer: number;
+  engineTemp: number;
+  timestamp: string;
+  faultCodes: string[];
+}`,
+        'src/constants.ts': `import { BusRoute, BusStatus, Student, StudentStatus, LogEntry, Tenant, Invoice, QuoteRequest, PurchaseOrder, DeviceGuide, PricingConfig, BudgetEntry, MaintenanceTicket } from "./types";
+
+export const INITIAL_ROUTES: BusRoute[] = ${JSON.stringify(INITIAL_ROUTES, null, 2)};
+export const INITIAL_STUDENTS: Student[] = ${JSON.stringify(INITIAL_STUDENTS, null, 2)};
+export const INITIAL_LOGS: LogEntry[] = ${JSON.stringify(INITIAL_LOGS, null, 2)};
+export const INITIAL_TICKETS: MaintenanceTicket[] = ${JSON.stringify(INITIAL_TICKETS, null, 2)};
+export const RECOMMENDED_HARDWARE: DeviceGuide[] = ${JSON.stringify(RECOMMENDED_HARDWARE, null, 2)};
+export const MOCK_TENANTS: Tenant[] = ${JSON.stringify(MOCK_TENANTS, null, 2)};
+export const MOCK_INVOICES: Invoice[] = ${JSON.stringify(MOCK_INVOICES, null, 2)};
+export const MOCK_QUOTES: QuoteRequest[] = ${JSON.stringify(MOCK_QUOTES, null, 2)};
+export const MOCK_POS: PurchaseOrder[] = ${JSON.stringify(MOCK_POS, null, 2)};
+export const INITIAL_PRICING_CONFIG: PricingConfig = ${JSON.stringify(INITIAL_PRICING_CONFIG, null, 2)};
+export const INITIAL_BUDGET_DATA: BudgetEntry[] = ${JSON.stringify(INITIAL_BUDGET_DATA, null, 2)};
+`,
+        'src/services/geminiService.ts': `import { GoogleGenAI, Type } from "@google/genai";
+import { BusRoute, LogEntry, AiInsight, RouteOptimizationResponse, BudgetEntry, FinancialInsight, MaintenanceTicket } from "../types";
+
+const apiKey = process.env.VITE_API_KEY || process.env.API_KEY || '';
+const ai = new GoogleGenAI({ apiKey });
+
+export const analyzeLogistics = async (routes: BusRoute[], logs: LogEntry[], tickets: MaintenanceTicket[] = []): Promise<AiInsight[]> => {
+  if (!apiKey) {
+    console.warn("No API Key provided for Gemini.");
+    return [
+      {
+        title: "API Key Missing",
+        description: "Please provide a valid API key to enable AI logistics analysis.",
+        type: "system",
+        confidence: 0
+      }
+    ] as any;
+  }
+
+  try {
+    const modelId = 'gemini-2.5-flash';
+    const prompt = \`
+      You are an AI Logistics Analyst for the Tucson Unified School District (TUSD).
+      Analyze the following current bus fleet status, recent event logs, and active maintenance tickets.
+      Identify potential safety risks, efficiency optimizations, or maintenance needs.
+      
+      Current Fleet Status:
+      \${JSON.stringify(routes.map(r => ({id: r.id, number: r.busNumber, status: r.status})), null, 2)}
+
+      Active Maintenance Tickets:
+      \${JSON.stringify(tickets, null, 2)}
+
+      Recent Logs:
+      \${JSON.stringify(logs.slice(0, 10), null, 2)}
+
+      Provide 3 concise, actionable insights. If there are critical maintenance issues, prioritize those.
+    \`;
+
+    const response = await ai.models.generateContent({
+      model: modelId,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              description: { type: Type.STRING },
+              type: { type: Type.STRING, enum: ["optimization", "safety", "maintenance"] },
+              confidence: { type: Type.NUMBER, description: "A number between 0 and 100" }
+            },
+            required: ["title", "description", "type", "confidence"]
+          }
+        }
+      }
+    });
+    return response.text ? JSON.parse(response.text) : [];
+  } catch (error) {
+    console.error("Error analyzing logistics:", error);
+    return [];
+  }
+};
+
+export const generateRouteOptimizations = async (routes: BusRoute[]): Promise<RouteOptimizationResponse> => {
+  if (!apiKey) return { overview: "API Key Missing", insights: [], estimatedSavings: "$0" };
+
+  try {
+    const prompt = \`
+      Act as a Senior Transportation Planner for TUSD. 
+      Analyze the following bus routes and student occupancy data.
+      Routes: \${JSON.stringify(routes, null, 2)}
+      Propose optimizations to consolidate routes or avoid traffic.
+    \`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            overview: { type: Type.STRING },
+            insights: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  routeId: { type: Type.STRING },
+                  suggestion: { type: Type.STRING },
+                  impact: { type: Type.STRING },
+                  newPathDescription: { type: Type.STRING }
+                },
+                required: ["routeId", "suggestion", "impact"]
+              }
+            },
+            estimatedSavings: { type: Type.STRING }
+          },
+          required: ["overview", "insights", "estimatedSavings"]
+        }
+      }
+    });
+    return response.text ? JSON.parse(response.text) : { overview: "No data", insights: [], estimatedSavings: "$0" };
+  } catch (error) {
+    return { overview: "Error", insights: [], estimatedSavings: "$0" };
+  }
+};
+
+export const draftParentCommunication = async (topic: string, busId: string): Promise<string> => {
+  if (!apiKey) return "API Key missing.";
+  try {
+    const prompt = \`Draft a short SMS for parents about Bus \${busId}. Topic: \${topic}.\`;
+    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+    return response.text || "Error generating draft.";
+  } catch (e) { return "Error."; }
+};
+
+export const analyzeBudget = async (budgetEntries: BudgetEntry[]): Promise<FinancialInsight[]> => {
+  if (!apiKey) return [];
+  try {
+    const prompt = \`Analyze budget for savings: \${JSON.stringify(budgetEntries)}\`;
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              finding: { type: Type.STRING },
+              recommendation: { type: Type.STRING },
+              potentialSavings: { type: Type.NUMBER }
+            }
+          }
+        }
+      }
+    });
+    return response.text ? JSON.parse(response.text) : [];
+  } catch (e) { return []; }
+};
+`,
+       'README.md': `# RideSmart Application
+
+## Installation
+
+1. \`npm install\`
+2. \`npm run dev\`
+
+## Environment
+
+Create a \`.env\` file:
+\`\`\`
+VITE_API_KEY=your_gemini_key
+\`\`\`
+`
+    };
+};
