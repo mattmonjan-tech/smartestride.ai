@@ -1,29 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  LayoutDashboard, 
-  Map as MapIcon, 
-  Users, 
-  Bell, 
-  Settings, 
-  Bus, 
-  LogOut, 
-  Search, 
-  ChevronRight, 
-  Pencil, 
-  User, 
-  GitMerge, 
-  AlertTriangle, 
-  Check, 
-  Cable, 
-  Upload, 
-  X, 
-  Shield, 
-  Calendar, 
-  Lock, 
-  DollarSign, 
-  Wrench, 
-  Tag 
+  LayoutDashboard, Map as MapIcon, Users, Bell, Settings, Bus, LogOut, Search, ChevronRight, Pencil, User, GitMerge, AlertTriangle, Check, Cable, Upload, X, Shield, Calendar, Lock, DollarSign, Wrench, Tag 
 } from 'lucide-react';
 import DashboardMetrics from './components/DashboardMetrics';
 import SimulatedMap from './components/SimulatedMap';
@@ -54,7 +31,7 @@ import { initSupabase } from './services/supabaseService';
 const RfidLogList: React.FC<{ logs: LogEntry[] }> = ({ logs }) => (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-            <h3 className="font-semibold text-slate-800">Live RFID Events</h3>
+            <h3 className="font-semibold text-slate-800">Live RFID & System Events</h3>
             <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Live Stream</span>
         </div>
         <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
@@ -67,6 +44,7 @@ const RfidLogList: React.FC<{ logs: LogEntry[] }> = ({ logs }) => (
                     <div>
                         <p className={`text-sm ${log.severity === 'critical' ? 'text-red-700 font-bold' : 'text-slate-800'}`}>
                             {log.type === 'WRONG_BUS' && <span className="uppercase mr-1">[Safety Alert]</span>}
+                            {log.type === 'ALERT' && <span className="uppercase mr-1 text-orange-600">[Driver Alert]</span>}
                             {log.message}
                         </p>
                         <p className="text-xs text-slate-500 mt-1 font-mono">{log.timestamp}</p>
@@ -100,11 +78,10 @@ export default function App() {
       if (systemSettings.supabaseUrl && systemSettings.supabaseKey) {
           initSupabase(systemSettings.supabaseUrl, systemSettings.supabaseKey);
       }
-  }, [systemSettings.supabaseUrl, systemSettings.supabaseKey]); // Added dependencies to ensure re-init on change
+  }, [systemSettings.supabaseUrl, systemSettings.supabaseKey]); 
 
   // Tenants State
   const [tenants, setTenants] = useState(() => {
-      // Mock logic for tenants persistence could go here
       return []; 
   });
 
@@ -156,17 +133,7 @@ export default function App() {
   };
 
   const handleNewQuote = (newQuote: QuoteRequest) => {
-      // 1. Update Super Admin State
       setAdminQuotes(prev => [newQuote, ...prev]);
-      
-      // 2. Simulate Email Notification to Matt Monjan
-      console.log(`
-        [EMAIL SENT]
-        To: matt.monjan@infusedu.com
-        Subject: New Quote Request - ${newQuote.districtName}
-        Body: A new quote for ${newQuote.amount.toLocaleString()} (Tier: ${newQuote.tier}) was generated for ${newQuote.contactName}.
-        Check Dashboard.
-      `);
   };
 
   // Effects
@@ -306,10 +273,8 @@ export default function App() {
       };
       setMaintenanceTickets(prev => [newTicket, ...prev]);
       
-      // Set Bus Status to Maintenance
       setRoutes(prev => prev.map(r => r.id === busId ? { ...r, status: BusStatus.MAINTENANCE, alert: undefined } : r));
       
-      // Log it
       setLogs(prev => [{
           id: `L-MAINT-${Date.now()}`,
           timestamp: new Date().toLocaleTimeString(),
@@ -324,10 +289,8 @@ export default function App() {
   };
 
   const handleResolveTicket = (ticketId: string, busId: string) => {
-      // Set Bus back to IDLE (Ready for route)
       setRoutes(prev => prev.map(r => r.id === busId ? { ...r, status: BusStatus.IDLE } : r));
       
-      // Log it
       setLogs(prev => [{
           id: `L-RESOLVE-${Date.now()}`,
           timestamp: new Date().toLocaleTimeString(),
@@ -355,7 +318,6 @@ export default function App() {
   };
 
   const handleImpersonate = (tenantId: string) => {
-      // Mock Impersonation: Switch role to CLIENT and pretend we loaded their data
       setUserRole('CLIENT');
       setActiveTab('dashboard');
   };
@@ -367,13 +329,28 @@ export default function App() {
       }
   };
 
-  const handleUpdateDriverStatus = (busId: string, status: BusStatus, alert?: string) => {
+  // CONNECT DRIVER APP TO ADMIN DASHBOARD LOGS
+  const handleUpdateDriverStatus = (busId: string, status: BusStatus, alertMsg?: string) => {
+      // 1. Update Fleet State
       setRoutes(prev => prev.map(r => {
           if (r.id === busId) {
-              return { ...r, status, alert };
+              return { ...r, status, alert: alertMsg };
           }
           return r;
       }));
+
+      // 2. Generate Dispatch Log for Admin View
+      const route = routes.find(r => r.id === busId);
+      if (route) {
+          const newLog: LogEntry = {
+              id: `L-DRIVER-${Date.now()}`,
+              timestamp: new Date().toLocaleTimeString(),
+              type: alertMsg ? 'ALERT' : 'SYSTEM',
+              message: alertMsg ? `Bus ${route.busNumber} Alert: ${alertMsg}` : `Bus ${route.busNumber} status updated to ${status}`,
+              severity: alertMsg ? (alertMsg.includes('EMERGENCY') ? 'critical' : 'warning') : 'info'
+          };
+          setLogs(prev => [newLog, ...prev].slice(0, 50)); 
+      }
   };
 
   if (!isLoggedIn) {
@@ -417,7 +394,6 @@ export default function App() {
                         />
                    </div>
                </div>
-               {/* Allow Fleet Import in Maintenance Mode too */}
                {showFleetImport && (
                   <FleetImportModal 
                     onImport={handleFleetImport}
@@ -472,7 +448,6 @@ export default function App() {
             <span className="font-medium">Students</span>
           </button>
           
-          {/* Feature: Special Events (Enterprise Only) */}
           {features.events ? (
             <button 
                 onClick={() => setActiveTab('events')}
@@ -489,7 +464,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Feature: Optimizer (Enterprise Only) */}
           {features.optimizer ? (
             <button 
                 onClick={() => setActiveTab('optimizer')}
@@ -509,7 +483,6 @@ export default function App() {
           <div className="pt-4 mt-4 border-t border-slate-800">
              <p className="text-xs text-slate-500 uppercase tracking-wider mb-2 px-4">Administration</p>
              
-             {/* Feature: Maintenance (Professional+) */}
              {features.maintenance ? (
                 <button 
                     onClick={() => setActiveTab('maintenance')}
@@ -526,7 +499,6 @@ export default function App() {
                 </div>
              )}
 
-             {/* Feature: Budget (Enterprise Only) */}
              {features.budget ? (
                 <button 
                     onClick={() => setActiveTab('budget')}
@@ -543,7 +515,6 @@ export default function App() {
                 </div>
              )}
 
-             {/* Feature: Hardware (Professional+) */}
              {features.hardware ? (
                 <button 
                     onClick={() => setActiveTab('hardware')}
@@ -560,7 +531,6 @@ export default function App() {
                 </div>
              )}
 
-            {/* Feature: Parent Portal (Professional+) */}
             {features.parentPortal ? (
                 <button 
                     onClick={() => setActiveTab('parent')}
@@ -579,7 +549,6 @@ export default function App() {
           </div>
         </nav>
 
-        {/* Subscription Badge */}
         <div className="p-4 border-t border-slate-800">
             <div className="bg-slate-800 rounded-lg p-3">
                 <p className="text-xs text-slate-400 uppercase font-bold mb-1">Active Plan</p>
@@ -613,9 +582,7 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-20 shadow-sm relative">
             <div>
                 <h2 className="text-xl font-bold text-slate-800 capitalize flex items-center gap-2">
@@ -632,7 +599,6 @@ export default function App() {
             </div>
             
             <div className="flex items-center gap-4">
-                {/* Search Input */}
                 <div className="relative hidden md:block" ref={searchRef}>
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input 
@@ -642,7 +608,6 @@ export default function App() {
                         placeholder="Search bus, student, or route..." 
                         className="pl-9 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-full text-sm w-64 transition-all outline-none border"
                     />
-                    {/* Search Results */}
                     {searchQuery.trim().length >= 2 && (
                          <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in slide-in-from-top-2 z-50">
                             {searchResults.students.length === 0 && searchResults.routes.length === 0 ? (
@@ -699,7 +664,6 @@ export default function App() {
                     )}
                 </div>
 
-                {/* Notification Bell */}
                 <div className="relative" ref={notificationRef}>
                     <button 
                         onClick={() => setShowNotifications(!showNotifications)}
@@ -753,7 +717,6 @@ export default function App() {
             </div>
         </header>
 
-        {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <div className="max-w-7xl mx-auto space-y-6 h-full">
                 
@@ -783,7 +746,6 @@ export default function App() {
                                 </div>
                             </div>
                             <div className="space-y-6">
-                                {/* Feature: AI Logistics (Enterprise Only) */}
                                 {features.aiLogistics ? (
                                     <AiLogistics routes={routes} logs={logs} tickets={maintenanceTickets} />
                                 ) : (
@@ -811,7 +773,7 @@ export default function App() {
                     </>
                 )}
 
-                {/* ... rest of the tabs remain the same but just ensured they are correctly placed in the return */}
+                {/* ... Fleet Tab ... */}
                 {activeTab === 'fleet' && (
                     <div className="h-full grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -832,9 +794,11 @@ export default function App() {
                             </div>
                         </div>
 
-                        {/* Fleet List Side Panel - ADDING DRIVER SCORECARD HERE */}
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
-                             <DriverScorecard routes={routes} />
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                             {/* Adding the Driver Safety Scorecard Here */}
+                             <div className="h-full overflow-y-auto custom-scrollbar">
+                                <DriverScorecard routes={routes} />
+                             </div>
                         </div>
                     </div>
                 )}
@@ -927,7 +891,6 @@ export default function App() {
         </div>
       </main>
       
-      {/* Modals */}
       {selectedStudent && (
           <StudentDetailsModal 
             student={selectedStudent} 
