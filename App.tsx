@@ -75,7 +75,7 @@ const RfidLogList: React.FC<{ logs: LogEntry[] }> = ({ logs }) => (
     </div>
 );
 
-export default function App() {
+const App = () => {
   // Auth State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<'CLIENT' | 'ADMIN' | 'DRIVER' | 'MAINTENANCE'>('CLIENT');
@@ -1049,3 +1049,4 @@ export default function App() {
     </div>
   );
 }
+export default App;
