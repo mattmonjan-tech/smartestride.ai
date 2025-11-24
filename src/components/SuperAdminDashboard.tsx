@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { MOCK_TENANTS, MOCK_INVOICES, INITIAL_ROUTES, INITIAL_STUDENTS, INITIAL_TICKETS } from '../constants';
 import { QuoteRequest, SystemSettings } from '../types';
