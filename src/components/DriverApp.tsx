@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { BusRoute, BusStatus } from '../types';
-import { Bus, Navigation, CheckCircle2, AlertTriangle, Gauge, Power, LogOut, MapPin, Satellite, X, Save, Clock } from 'lucide-react';
+import { Bus, Navigation, CheckCircle2, AlertTriangle, Gauge, Power, LogOut, MapPin, Satellite, X, Save, Clock, Send } from 'lucide-react';
 
 interface DriverAppProps {
     routes: BusRoute[];
@@ -19,6 +20,7 @@ const DriverApp: React.FC<DriverAppProps> = ({ routes, onUpdateStatus }) => {
     const [showOdometerInput, setShowOdometerInput] = useState(false);
     const [odometer, setOdometer] = useState(45200);
     const [emergencyActive, setEmergencyActive] = useState(false);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
     
     const [checklist, setChecklist] = useState({
         tires: false,
@@ -28,6 +30,12 @@ const DriverApp: React.FC<DriverAppProps> = ({ routes, onUpdateStatus }) => {
     });
 
     const activeRoute = routes.find(r => r.id === selectedRouteId);
+
+    // Helper to show temporary success message
+    const showToast = (msg: string) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(null), 3000);
+    };
 
     // --- REAL GPS LOGIC ---
     useEffect(() => {
@@ -60,6 +68,7 @@ const DriverApp: React.FC<DriverAppProps> = ({ routes, onUpdateStatus }) => {
             setIsOnRoute(true);
             if (activeRoute) {
                 onUpdateStatus(activeRoute.id, BusStatus.ON_ROUTE);
+                showToast("Route Started - Dispatch Notified");
             }
         }
     };
@@ -70,6 +79,7 @@ const DriverApp: React.FC<DriverAppProps> = ({ routes, onUpdateStatus }) => {
         setChecklist({ tires: false, lights: false, fluids: false, brakes: false });
         if (activeRoute) {
             onUpdateStatus(activeRoute.id, BusStatus.COMPLETED);
+            showToast("Route Ended - Logs Uploaded");
         }
     };
 
@@ -77,14 +87,13 @@ const DriverApp: React.FC<DriverAppProps> = ({ routes, onUpdateStatus }) => {
         if (activeRoute) {
             onUpdateStatus(activeRoute.id, BusStatus.DELAYED, reason);
             setShowDelayMenu(false);
-            alert(`Dispatch notified: ${reason}`);
+            showToast(`Delay Sent: ${reason}`);
         }
     };
 
     const handleSaveOdometer = () => {
         setShowOdometerInput(false);
-        // In a real app, this sends to API
-        alert(`Odometer reading ${odometer} saved successfully.`);
+        showToast(`Odometer Updated: ${odometer}`);
     };
 
     const reportEmergency = () => {
@@ -98,6 +107,15 @@ const DriverApp: React.FC<DriverAppProps> = ({ routes, onUpdateStatus }) => {
 
     return (
         <div className={`h-screen flex flex-col font-poppins ${emergencyActive ? 'bg-red-900 text-white animate-pulse' : 'bg-slate-900 text-white'}`}>
+            
+            {/* Success Toast Notification */}
+            {toastMessage && (
+                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-full shadow-2xl z-[60] flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
+                    <CheckCircle2 size={20} />
+                    <span className="font-bold">{toastMessage}</span>
+                </div>
+            )}
+
             <header className={`p-4 flex justify-between items-center shadow-lg ${emergencyActive ? 'bg-red-800' : 'bg-slate-800'}`}>
                 <div className="flex items-center gap-3">
                     <div className={`${emergencyActive ? 'bg-white text-red-600' : 'bg-blue-600 text-white'} p-2 rounded-lg`}>
@@ -120,9 +138,9 @@ const DriverApp: React.FC<DriverAppProps> = ({ routes, onUpdateStatus }) => {
             </header>
 
             <main className="flex-1 p-6 overflow-y-auto relative">
-                {/* Traffic Delay Modal Overlay */}
+                {/* Traffic Delay Modal Overlay - UPDATED TO FIXED POSITIONING */}
                 {showDelayMenu && (
-                    <div className="absolute inset-0 z-50 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
                         <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl">
                             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                                 <Clock className="text-orange-500" /> Select Delay Reason
@@ -132,20 +150,20 @@ const DriverApp: React.FC<DriverAppProps> = ({ routes, onUpdateStatus }) => {
                                     <button 
                                         key={reason}
                                         onClick={() => handleTrafficDelay(reason)}
-                                        className="p-4 bg-slate-700 hover:bg-slate-600 rounded-xl font-medium text-sm transition-colors"
+                                        className="p-4 bg-slate-700 hover:bg-slate-600 rounded-xl font-medium text-sm transition-colors text-white"
                                     >
                                         {reason}
                                     </button>
                                 ))}
                             </div>
-                            <button onClick={() => setShowDelayMenu(false)} className="mt-4 w-full py-3 bg-slate-900 rounded-xl font-bold text-slate-400">Cancel</button>
+                            <button onClick={() => setShowDelayMenu(false)} className="mt-4 w-full py-3 bg-slate-900 rounded-xl font-bold text-slate-400 hover:bg-slate-950">Cancel</button>
                         </div>
                     </div>
                 )}
 
-                {/* Odometer Input Overlay */}
+                {/* Odometer Input Overlay - UPDATED TO FIXED POSITIONING */}
                 {showOdometerInput && (
-                    <div className="absolute inset-0 z-50 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
                         <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl text-center">
                             <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2">
                                 <Gauge className="text-blue-500" /> Update Odometer
@@ -159,7 +177,7 @@ const DriverApp: React.FC<DriverAppProps> = ({ routes, onUpdateStatus }) => {
                                 />
                             </div>
                             <div className="flex gap-3">
-                                <button onClick={() => setShowOdometerInput(false)} className="flex-1 py-3 bg-slate-700 rounded-xl font-bold text-slate-300">Cancel</button>
+                                <button onClick={() => setShowOdometerInput(false)} className="flex-1 py-3 bg-slate-700 rounded-xl font-bold text-slate-300 hover:bg-slate-600">Cancel</button>
                                 <button onClick={handleSaveOdometer} className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-white flex items-center justify-center gap-2"><Save size={18} /> Save</button>
                             </div>
                         </div>
