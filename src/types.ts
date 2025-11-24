@@ -1,4 +1,3 @@
-
 export enum BusStatus {
   ON_ROUTE = 'On Route',
   IDLE = 'Idle',
@@ -238,4 +237,3 @@ export interface TelemetryData {
   timestamp: string;
   faultCodes: string[];
 }
-ODE HERE
