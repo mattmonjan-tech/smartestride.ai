@@ -58,6 +58,7 @@ export const INITIAL_ROUTES: BusRoute[] = [
     vehicleType: 'Shuttle',
     type: 'STANDARD'
   },
+  // Special Events
   {
     id: 'E-501',
     name: 'Science Center Field Trip',
