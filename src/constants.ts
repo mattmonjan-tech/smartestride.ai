@@ -58,7 +58,6 @@ export const INITIAL_ROUTES: BusRoute[] = [
     vehicleType: 'Shuttle',
     type: 'STANDARD'
   },
-  // Special Events
   {
     id: 'E-501',
     name: 'Science Center Field Trip',
@@ -180,8 +179,6 @@ export const RECOMMENDED_HARDWARE: DeviceGuide[] = [
   }
 ];
 
-// --- Super Admin Mock Data ---
-
 export const MOCK_TENANTS: Tenant[] = [
   { id: 'T-001', name: 'Tucson Unified (TUSD)', contactEmail: 'transport@tusd1.org', status: 'ACTIVE', studentCount: 39000, busCount: 240, joinedDate: '2023-08-15', databaseSchema: 'schema_tusd_prod' },
   { id: 'T-002', name: 'Mesa Public Schools', contactEmail: 'admin@mpsaz.org', status: 'ACTIVE', studentCount: 64000, busCount: 415, joinedDate: '2024-01-10', databaseSchema: 'schema_mesa_prod' },
@@ -224,4 +221,3 @@ export const INITIAL_BUDGET_DATA: BudgetEntry[] = [
   { id: 'b9', category: 'Leases/Purchases', amount: 300000, fiscalYear: 2024, date: '2024-06-01', description: 'Fleet Lease Payments' },
   { id: 'b10', category: 'Technology', amount: 45000, fiscalYear: 2024, date: '2024-06-01', description: 'New Tablet Hardware' },
 ];
-E
