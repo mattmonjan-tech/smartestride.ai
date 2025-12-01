@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { X, Printer, Zap, Tablet, Server, Wifi, Globe, Download, Loader2, Trash2, Code, AlertTriangle, Cable } from 'lucide-react';
+import { X, Printer, Zap, Tablet, Server, CheckCircle2, AlertTriangle, ArrowRight, Wifi, Smartphone, Cable, ShieldCheck, Code, GitBranch, Globe, LayoutDashboard, Download, Loader2, Trash2, Terminal, Settings } from 'lucide-react';
 import JSZip from 'jszip';
 import saveAs from 'file-saver';
-import { getProjectFiles } from '../services/rescueExport';
+import { getProjectFiles } from '../services/codeExport';
 
 interface InstallationGuideProps {
   onClose: () => void;
@@ -22,7 +22,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
       setIsZipping(true);
       try {
           const zip = new JSZip();
-          const staticFiles = getProjectFiles(); 
+          const staticFiles = getProjectFiles(); // Get static configs like package.json
 
           // Add Files
           Object.entries(staticFiles).forEach(([name, content]) => {
@@ -31,7 +31,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
 
           // Generate ZIP
           const content = await zip.generateAsync({ type: "blob" });
-          saveAs(content, "ridesmart-source-v45.zip");
+          saveAs(content, "ridesmart-v13-nuclear-fix.zip");
       } catch (e) {
           console.error("Zip failed", e);
           alert("Could not generate ZIP. Please check console.");
@@ -172,6 +172,16 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                              </div>
                         </div>
                     </div>
+
+                    <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl">
+                        <h3 className="font-bold text-blue-800 mb-2 flex items-center gap-2"><Wifi size={20}/> Provisioning</h3>
+                        <p className="text-sm text-blue-700 mb-4">
+                            Once installed, navigate to <strong>Super Admin > Infrastructure > Telematics</strong> and enter the Serial Number (ESN) found on the device to link it to the specific bus number.
+                        </p>
+                        <div className="bg-white p-3 rounded border border-blue-200 font-mono text-sm text-slate-600">
+                            Example SN: G9-1234-5678-9012
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -195,12 +205,12 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                             <p className="text-sm text-slate-500 mt-2">Provision an iPad (iOS 15+) or Samsung Tab A8. Install "RideSmart Driver" from the MDM store.</p>
                         </div>
                         <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center">
-                            <Code size={48} className="mx-auto mb-4 text-slate-400" />
+                            <ShieldCheck size={48} className="mx-auto mb-4 text-slate-400" />
                             <h3 className="font-bold text-slate-800">2. Physical Mount</h3>
                             <p className="text-sm text-slate-500 mt-2">Use a heavy-duty RAM Mount to secure tablet to the right of the steering wheel. Ensure power is hardwired.</p>
                         </div>
                         <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center">
-                            <Zap size={48} className="mx-auto mb-4 text-slate-400" />
+                            <Smartphone size={48} className="mx-auto mb-4 text-slate-400" />
                             <h3 className="font-bold text-slate-800">3. Kiosk Mode</h3>
                             <p className="text-sm text-slate-500 mt-2">Enable "Guided Access" (iOS) or "Pin App" (Android) to prevent drivers from exiting the application.</p>
                         </div>
@@ -218,6 +228,38 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                     </div>
                 </div>
             )}
+
+            {/* ---------------- CLOUD GUIDE ---------------- */}
+             {(activeTab === 'CLOUD' || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                <div className="space-y-8 pt-8 border-t border-slate-200 print:border-0 print:pt-0 print:mt-8">
+                    <div className="border-b border-slate-100 pb-6">
+                        <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-3">
+                            <span className="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center text-sm">C</span>
+                            IT & Cloud Configuration
+                        </h2>
+                        <p className="text-slate-600">
+                            Technical requirements for the Network Administrator.
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                            <div>
+                                <p className="font-bold text-slate-800">Firewall Whitelist</p>
+                                <p className="text-sm text-slate-500">Allow outbound traffic on ports 80/443 and 8883 (MQTT).</p>
+                            </div>
+                            <code className="bg-slate-100 px-3 py-1 rounded text-sm font-mono">*.ridesmart.ai</code>
+                        </div>
+                         <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                            <div>
+                                <p className="font-bold text-slate-800">MDM Configuration</p>
+                                <p className="text-sm text-slate-500">Push App Configuration Key for auto-login.</p>
+                            </div>
+                            <code className="bg-slate-100 px-3 py-1 rounded text-sm font-mono">dist_id=TUSD_882</code>
+                        </div>
+                    </div>
+                </div>
+             )}
 
              {/* ---------------- GOING LIVE GUIDE ---------------- */}
              {activeTab === 'LIVE' && (
