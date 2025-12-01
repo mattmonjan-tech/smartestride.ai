@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
-import { X, Printer, Zap, Tablet, Server, CheckCircle2, AlertTriangle, ArrowRight, Wifi, Smartphone, Cable, ShieldCheck, Code, GitBranch, Globe, LayoutDashboard, Download, Loader2, Trash2, Terminal, Settings } from 'lucide-react';
+import { X, Printer, Zap, Tablet, Server, CheckCircle2, AlertTriangle, Wifi, Smartphone, Cable, ShieldCheck, Code, Globe, Download, Loader2, Trash2 } from 'lucide-react';
 import JSZip from 'jszip';
 import saveAs from 'file-saver';
-import { getProjectFiles } from '../services/codeExport';
+import { getProjectFiles } from '../services/rescueExport';
 
 interface InstallationGuideProps {
   onClose: () => void;
@@ -21,7 +22,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
       setIsZipping(true);
       try {
           const zip = new JSZip();
-          const staticFiles = getProjectFiles(); // Get static configs like package.json
+          const staticFiles = getProjectFiles(); 
 
           // Add Files
           Object.entries(staticFiles).forEach(([name, content]) => {
@@ -30,7 +31,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
 
           // Generate ZIP
           const content = await zip.generateAsync({ type: "blob" });
-          saveAs(content, "ridesmart-v13-nuclear-fix.zip");
+          saveAs(content, "ridesmart-source-v45.zip");
       } catch (e) {
           console.error("Zip failed", e);
           alert("Could not generate ZIP. Please check console.");
@@ -169,16 +170,6 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                                      </div>
                                  </div>
                              </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl">
-                        <h3 className="font-bold text-blue-800 mb-2 flex items-center gap-2"><Wifi size={20}/> Provisioning</h3>
-                        <p className="text-sm text-blue-700 mb-4">
-                            Once installed, navigate to <strong>Super Admin > Infrastructure > Telematics</strong> and enter the Serial Number (ESN) found on the device to link it to the specific bus number.
-                        </p>
-                        <div className="bg-white p-3 rounded border border-blue-200 font-mono text-sm text-slate-600">
-                            Example SN: G9-1234-5678-9012
                         </div>
                     </div>
                 </div>
