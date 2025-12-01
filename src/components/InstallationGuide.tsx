@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
-import { X, Printer, Zap, Tablet, Server, CheckCircle2, AlertTriangle, ArrowRight, Wifi, Smartphone, Cable, ShieldCheck, Code, GitBranch, Globe, LayoutDashboard, Download, Loader2, Trash2, Terminal, Settings } from 'lucide-react';
+import { X, Printer, Zap, Tablet, Server, Wifi, Globe, Download, Loader2, Trash2, Code, AlertTriangle, Cable, ShieldCheck, Smartphone, Settings } from 'lucide-react';
 import JSZip from 'jszip';
 import saveAs from 'file-saver';
-import { getProjectFiles } from '../services/codeExport';
+import { getProjectFiles } from '../services/rescueExport';
 
 interface InstallationGuideProps {
   onClose: () => void;
@@ -22,7 +21,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
       setIsZipping(true);
       try {
           const zip = new JSZip();
-          const staticFiles = getProjectFiles(); // Get static configs like package.json
+          const staticFiles = getProjectFiles(); 
 
           // Add Files
           Object.entries(staticFiles).forEach(([name, content]) => {
@@ -31,7 +30,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
 
           // Generate ZIP
           const content = await zip.generateAsync({ type: "blob" });
-          saveAs(content, "ridesmart-v13-nuclear-fix.zip");
+          saveAs(content, "ridesmart-source-v45.zip");
       } catch (e) {
           console.error("Zip failed", e);
           alert("Could not generate ZIP. Please check console.");
@@ -152,7 +151,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                                      <div className="w-8 h-8 bg-slate-900 text-white rounded-full flex items-center justify-center font-bold shrink-0">1</div>
                                      <div>
                                          <h4 className="font-bold text-slate-900">Locate Diagnostic Port</h4>
-                                         <p className="text-sm text-slate-600 mt-1">Usually located under the dashboard on the driver's left side, or in the kick panel.</p>
+                                         <p className="text-sm text-slate-600 mt-1">Usually located under the dashboard on the driver&apos;s left side, or in the kick panel.</p>
                                      </div>
                                  </div>
                                  <div className="flex gap-4">
@@ -176,7 +175,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                     <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl">
                         <h3 className="font-bold text-blue-800 mb-2 flex items-center gap-2"><Wifi size={20}/> Provisioning</h3>
                         <p className="text-sm text-blue-700 mb-4">
-                            Once installed, navigate to <strong>Super Admin > Infrastructure > Telematics</strong> and enter the Serial Number (ESN) found on the device to link it to the specific bus number.
+                            Once installed, navigate to <strong>Super Admin &gt; Infrastructure &gt; Telematics</strong> and enter the Serial Number (ESN) found on the device to link it to the specific bus number.
                         </p>
                         <div className="bg-white p-3 rounded border border-blue-200 font-mono text-sm text-slate-600">
                             Example SN: G9-1234-5678-9012
@@ -229,7 +228,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                 </div>
             )}
 
-            {/* ---------------- CLOUD GUIDE ---------------- */}
+             {/* ---------------- CLOUD GUIDE ---------------- */}
              {(activeTab === 'CLOUD' || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
                 <div className="space-y-8 pt-8 border-t border-slate-200 print:border-0 print:pt-0 print:mt-8">
                     <div className="border-b border-slate-100 pb-6">
