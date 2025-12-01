@@ -58,7 +58,6 @@ export const INITIAL_ROUTES: BusRoute[] = [
     vehicleType: 'Shuttle',
     type: 'STANDARD'
   },
-  // Special Events
   {
     id: 'E-501',
     name: 'Science Center Field Trip',
@@ -130,7 +129,7 @@ export const INITIAL_TICKETS: MaintenanceTicket[] = [
         reportedBy: 'Driver (David Chen)',
         reportedAt: '2024-05-19', 
         status: 'OPEN', 
-        priority: 'MEDIUM',
+        priority: 'MEDIUM', 
         progress: 0,
         estimatedCompletion: '1 day',
         notes: ['Driver reports AC stops blowing cold when idle.']
