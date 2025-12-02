@@ -15,7 +15,6 @@ const InteractiveHeroDemo = () => {
   const [showAlert, setShowAlert] = useState(false);
   
   useEffect(() => {
-    // Animate progress bar
     const timer = setInterval(() => {
         setProgress(p => {
             if (p >= 100) return 0;
@@ -26,21 +25,18 @@ const InteractiveHeroDemo = () => {
   }, []);
 
   useEffect(() => {
-    // Toggle AI Alert every few seconds
     const alertTimer = setInterval(() => {
         setShowAlert(prev => !prev);
     }, 5000);
     return () => clearInterval(alertTimer);
   }, []);
   
-  // Calculate ETA based on progress
   useEffect(() => {
       setEta(Math.max(1, Math.ceil(8 * (1 - progress/100))));
   }, [progress]);
 
   return (
     <div className="relative h-[450px] lg:h-[600px] w-full flex items-center justify-center">
-       {/* Abstract Map Background */}
        <div className="absolute inset-0 opacity-10 pointer-events-none select-none">
            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                <path d="M10,10 Q40,40 60,10 T90,50" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-blue-600" />
@@ -49,9 +45,7 @@ const InteractiveHeroDemo = () => {
            </svg>
        </div>
 
-       {/* Main Dashboard Card - Tilted & Animated */}
        <div className="relative z-20 w-72 md:w-80 bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 p-5 transform transition-all hover:scale-105 duration-500 animate-in fade-in slide-in-from-bottom-8">
-            {/* Card Header */}
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
@@ -67,7 +61,6 @@ const InteractiveHeroDemo = () => {
                 </div>
             </div>
 
-            {/* Progress Visual */}
             <div className="space-y-4">
                 <div className="flex justify-between text-xs font-bold text-slate-600 uppercase tracking-wide">
                     <span>Route Progress</span>
@@ -90,7 +83,6 @@ const InteractiveHeroDemo = () => {
                 </div>
             </div>
             
-            {/* Live Stats Row */}
             <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-100">
                 <div className="text-center p-2 rounded-lg bg-slate-50 hover:bg-blue-50 transition-colors">
                     <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Speed</p>
@@ -103,7 +95,6 @@ const InteractiveHeroDemo = () => {
             </div>
        </div>
 
-       {/* Floating Alert Card - Animated Entrances */}
        <div className={`absolute top-10 -left-2 md:left-0 w-64 bg-slate-800 text-white rounded-xl shadow-2xl p-4 z-30 transition-all duration-700 transform border border-slate-700 ${showAlert ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-95 pointer-events-none'}`}>
             <div className="flex items-start gap-3">
                 <div className="bg-amber-500/20 p-2 rounded-lg text-amber-500 shrink-0">
@@ -118,7 +109,6 @@ const InteractiveHeroDemo = () => {
             </div>
        </div>
 
-       {/* Decorative Background Blob */}
        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-blue-100 to-purple-100 rounded-full blur-3xl -z-10 opacity-60"></div>
     </div>
   );
@@ -178,7 +168,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       email: '',
       students: '',
       buses: '',
-      legacyBuses: '', // New field for Retrofit calculation
+      legacyBuses: '',
       tier: 'PROFESSIONAL' as SubscriptionTier
   });
   const [generatedQuote, setGeneratedQuote] = useState<QuoteRequest | null>(null);
@@ -209,7 +199,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
           case 'ENTERPRISE': basePrice = 10000; perBusPrice = 600; break;
       }
 
-      // Volume Discount Logic (Tiered Pricing)
+      // Volume Discount Logic
       let discountPerBus = 0;
       if (busCount > 1000) discountPerBus = 5.00;
       else if (busCount > 750) discountPerBus = 4.00;
@@ -219,13 +209,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
 
       const adjustedPerBusPrice = perBusPrice - discountPerBus;
       
-      // Hardware Cost Calculation (15% Margin)
-      // Base Cost assumed $150. Margin 15% -> 150 * 1.15 = 172.50
       const hardwareTotal = legacyCount * 172.50;
-      
       const totalAnnual = basePrice + (busCount * adjustedPerBusPrice);
-      
-      // Quote Amount is usually the Annual Subscription + One-Time Hardware
       const grandTotal = totalAnnual + hardwareTotal;
 
       setDiscountDetails({
@@ -244,7 +229,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
           busCount: busCount,
           legacyBusCount: legacyCount,
           tier: quoteForm.tier,
-          amount: grandTotal, // Total value of the deal
+          amount: grandTotal,
           hardwareCost: hardwareTotal,
           status: 'PENDING',
           submittedDate: new Date().toLocaleDateString()
@@ -262,7 +247,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
 
   const handleLoginSubmit = () => {
       if (loginTab === 'OFFICE') {
-          // Simulate admin check (if district ID is 'admin' go to super admin)
           const cleanId = districtId.trim().toLowerCase();
           if (['admin', 'super', 'root', 'matt'].includes(cleanId)) {
               onLogin('ADMIN');
@@ -279,46 +263,21 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       setShowLoginModal(false);
   };
 
-  // Robust Print Function
   const handlePrint = () => {
     const printContent = document.getElementById('quote-document');
     if (!printContent) return;
 
-    // Open a new window to ensure clean print environment
     const printWindow = window.open('', '_blank', 'width=800,height=900');
     if (printWindow) {
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>RideSmart Quote #${generatedQuote?.id}</title>
-                    <script src="https://cdn.tailwindcss.com"></script>
-                    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-                    <style>
-                        body { font-family: 'Poppins', sans-serif; padding: 40px; -webkit-print-color-adjust: exact; }
-                    </style>
-                </head>
-                <body>
-                    ${printContent.innerHTML}
-                    <script>
-                        setTimeout(() => {
-                            window.print();
-                            window.close();
-                        }, 500);
-                    </script>
-                </body>
-            </html>
-        `);
+        printWindow.document.write(`<html><head><title>RideSmart Quote #${generatedQuote?.id}</title><script src="https://cdn.tailwindcss.com"></script></head><body>${printContent.innerHTML}<script>setTimeout(() => { window.print(); window.close(); }, 500);</script></body></html>`);
         printWindow.document.close();
     }
   };
 
-  // Send Real Email via Mailto
   const handleMailto = () => {
       if (!generatedQuote) return;
       const subject = `RideSmart Quote #${generatedQuote.id} for ${generatedQuote.districtName}`;
       const body = `Hello ${generatedQuote.contactName},\n\nHere is the generated pricing estimate for ${generatedQuote.districtName}.\n\nPlan: ${generatedQuote.tier}\nFleet Size: ${generatedQuote.busCount}\nTotal Proposal Value: $${generatedQuote.amount.toLocaleString()}\n\nPlease review the details attached or visiting our portal.\n\nBest regards,\nRideSmart AI Team`;
-      
-      // Using window.open with _blank to prevent "refused to connect" errors within iframes/previews
       const mailtoUrl = `mailto:${quoteForm.email}?bcc=matt.monjan@infusedu.com&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       window.open(mailtoUrl, '_blank');
   };
@@ -414,7 +373,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
               Replace paper manifests with AI-powered logistics. RideSmart provides real-time RFID tracking, automated parent notifications, and route optimization for modern school districts.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              {/* UPDATED: Open Login Modal instead of direct Admin Login */}
               <button onClick={() => setShowLoginModal(true)} className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
                 Launch Dashboard <ArrowRight size={18} />
               </button>
@@ -594,7 +552,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
                           <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">RS</div>
                               <div>
-                                  <p className="text-sm font-bold text-slate-800">RideSmart Auto-Mailer <span className="font-normal text-slate-500">(noreply@ridesmart.ai)</span></p>
+                                  <p className="text-sm font-bold text-slate-800">RideSmart Auto-Mailer <span className="font-normal text-slate-500">- noreply@ridesmart.ai</span></p>
                                   <p className="text-xs text-slate-400">To: {quoteForm.email}</p>
                                   <p className="text-xs text-slate-400">BCC: matt.monjan@infusedu.com</p>
                               </div>
