@@ -8,7 +8,7 @@ interface LandingPageProps {
   onQuoteRequest?: (quote: QuoteRequest) => void;
 }
 
-// Interactive Demo Component to prevent overlap and add life to the landing page
+// Interactive Demo Component
 const InteractiveHeroDemo = () => {
   const [progress, setProgress] = useState(65);
   const [eta, setEta] = useState(5);
@@ -168,7 +168,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       email: '',
       students: '',
       buses: '',
-      legacyBuses: '',
+      legacyBuses: '', // New field for Retrofit calculation
       tier: 'PROFESSIONAL' as SubscriptionTier
   });
   const [generatedQuote, setGeneratedQuote] = useState<QuoteRequest | null>(null);
@@ -186,6 +186,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
 
   const handleQuoteSubmit = (e: React.FormEvent) => {
       e.preventDefault();
+      // Calculate Quote
       const busCount = parseInt(quoteForm.buses) || 0;
       const legacyCount = parseInt(quoteForm.legacyBuses) || 0;
       
@@ -198,6 +199,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
           case 'ENTERPRISE': basePrice = 10000; perBusPrice = 600; break;
       }
 
+      // Volume Discount Logic
       let discountPerBus = 0;
       if (busCount > 1000) discountPerBus = 5.00;
       else if (busCount > 750) discountPerBus = 4.00;
@@ -206,6 +208,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       else if (busCount > 100) discountPerBus = 2.50;
 
       const adjustedPerBusPrice = perBusPrice - discountPerBus;
+      
       const hardwareTotal = legacyCount * 172.50;
       const totalAnnual = basePrice + (busCount * adjustedPerBusPrice);
       const grandTotal = totalAnnual + hardwareTotal;
@@ -236,6 +239,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       if (onQuoteRequest) {
           onQuoteRequest(newQuote);
       }
+
+      // Show Notification Toast
       setShowToast(true);
       setTimeout(() => setShowToast(false), 8000);
   };
@@ -264,7 +269,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
 
     const printWindow = window.open('', '_blank', 'width=800,height=900');
     if (printWindow) {
-        printWindow.document.write(`<html><head><title>RideSmart Quote #${generatedQuote?.id}</title><script src="https://cdn.tailwindcss.com"></script></head><body>${printContent.innerHTML}<script>setTimeout(() => { window.print(); window.close(); }, 500);</script></body></html>`);
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>RideSmart Quote #${generatedQuote?.id}</title>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        body { font-family: 'Poppins', sans-serif; padding: 40px; -webkit-print-color-adjust: exact; }
+                    </style>
+                </head>
+                <body>
+                    ${printContent.innerHTML}
+                    <script>
+                        setTimeout(() => {
+                            window.print();
+                            window.close();
+                        }, 500);
+                    </script>
+                </body>
+            </html>
+        `);
         printWindow.document.close();
     }
   };
@@ -273,6 +298,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       if (!generatedQuote) return;
       const subject = `RideSmart Quote #${generatedQuote.id} for ${generatedQuote.districtName}`;
       const body = `Hello ${generatedQuote.contactName},\n\nHere is the generated pricing estimate for ${generatedQuote.districtName}.\n\nPlan: ${generatedQuote.tier}\nFleet Size: ${generatedQuote.busCount}\nTotal Proposal Value: $${generatedQuote.amount.toLocaleString()}\n\nPlease review the details attached or visiting our portal.\n\nBest regards,\nRideSmart AI Team`;
+      
       const mailtoUrl = `mailto:${quoteForm.email}?bcc=matt.monjan@infusedu.com&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       window.open(mailtoUrl, '_blank');
   };
@@ -302,7 +328,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
             <div className="flex-1">
               <p className="font-bold text-sm text-white">Quote Generated Successfully</p>
               <p className="text-xs text-slate-400 mt-1">Ready to send to: {quoteForm.email}</p>
-              <p className="text-xs text-slate-400 mt-0.5">BCC: matt.monjan@infusedu.com</p>
               <button 
                 onClick={() => setShowEmailPreview(true)}
                 className="text-[10px] font-bold text-blue-300 hover:text-blue-200 underline mt-2"
@@ -368,11 +393,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
               Replace paper manifests with AI-powered logistics. RideSmart provides real-time RFID tracking, automated parent notifications, and route optimization for modern school districts.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button onClick={() => setShowQuoteModal(true)} className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
-                Request Pricing <ArrowRight size={18} />
+              {/* UPDATED: Open Login Modal instead of direct Admin Login */}
+              <button onClick={() => setShowLoginModal(true)} className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                Launch Dashboard <ArrowRight size={18} />
               </button>
-              <button onClick={() => setShowHardwareModal(true)} className="px-8 py-4 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
-                View Hardware Guide
+              <button onClick={() => setShowQuoteModal(true)} className="px-8 py-4 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                Request Pricing
               </button>
             </div>
             <div className="pt-8 flex items-center gap-6 text-sm text-slate-500 font-medium">
@@ -381,7 +407,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
             </div>
           </div>
           
-          {/* Hero Graphic / Interactive Demo */}
+          {/* Hero Graphic */}
           <div className="w-full">
              <InteractiveHeroDemo />
           </div>
@@ -527,7 +553,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       {showEmailPreview && generatedQuote && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-300">
-                  {/* Mock Email Window Header */}
                   <div className="bg-slate-100 border-b border-slate-300 p-3 flex items-center justify-between">
                       <div className="flex gap-2">
                           <div className="w-3 h-3 rounded-full bg-red-400"></div>
@@ -540,14 +565,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
                       </button>
                   </div>
                   
-                  {/* Mock Email Body */}
                   <div className="p-8 bg-white">
                       <div className="border-b border-slate-100 pb-6 mb-6">
                           <h2 className="text-xl font-bold text-slate-900 mb-2">New Quote Request: {generatedQuote.districtName}</h2>
                           <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">RS</div>
                               <div>
-                                  <p className="text-sm font-bold text-slate-800">RideSmart Auto-Mailer <span className="font-normal text-slate-500">&lt;noreply@ridesmart.ai&gt;</span></p>
+                                  <p className="text-sm font-bold text-slate-800">RideSmart Auto-Mailer <span className="font-normal text-slate-500">{'<'}noreply@ridesmart.ai{'>'}</span></p>
                                   <p className="text-xs text-slate-400">To: {quoteForm.email}</p>
                                   <p className="text-xs text-slate-400">BCC: matt.monjan@infusedu.com</p>
                               </div>
