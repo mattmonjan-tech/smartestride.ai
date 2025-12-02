@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bus, Shield, CheckCircle2, ArrowRight, Upload, X, FileText, Tablet, Scan, Cable, Check, Zap, Navigation, Printer, Mail, Map, Brain, DollarSign, Wrench, Lock, LayoutDashboard, User, AlertCircle } from 'lucide-react';
 import { RECOMMENDED_HARDWARE } from '../constants';
@@ -9,14 +8,13 @@ interface LandingPageProps {
   onQuoteRequest?: (quote: QuoteRequest) => void;
 }
 
-// Interactive Demo Component to prevent overlap and add life to the landing page
+// Interactive Demo Component
 const InteractiveHeroDemo = () => {
   const [progress, setProgress] = useState(65);
   const [eta, setEta] = useState(5);
   const [showAlert, setShowAlert] = useState(false);
   
   useEffect(() => {
-    // Animate progress bar
     const timer = setInterval(() => {
         setProgress(p => {
             if (p >= 100) return 0;
@@ -27,21 +25,18 @@ const InteractiveHeroDemo = () => {
   }, []);
 
   useEffect(() => {
-    // Toggle AI Alert every few seconds
     const alertTimer = setInterval(() => {
         setShowAlert(prev => !prev);
     }, 5000);
     return () => clearInterval(alertTimer);
   }, []);
   
-  // Calculate ETA based on progress
   useEffect(() => {
       setEta(Math.max(1, Math.ceil(8 * (1 - progress/100))));
   }, [progress]);
 
   return (
     <div className="relative h-[450px] lg:h-[600px] w-full flex items-center justify-center">
-       {/* Abstract Map Background */}
        <div className="absolute inset-0 opacity-10 pointer-events-none select-none">
            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                <path d="M10,10 Q40,40 60,10 T90,50" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-blue-600" />
@@ -50,9 +45,7 @@ const InteractiveHeroDemo = () => {
            </svg>
        </div>
 
-       {/* Main Dashboard Card - Tilted & Animated */}
        <div className="relative z-20 w-72 md:w-80 bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 p-5 transform transition-all hover:scale-105 duration-500 animate-in fade-in slide-in-from-bottom-8">
-            {/* Card Header */}
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
@@ -68,7 +61,6 @@ const InteractiveHeroDemo = () => {
                 </div>
             </div>
 
-            {/* Progress Visual */}
             <div className="space-y-4">
                 <div className="flex justify-between text-xs font-bold text-slate-600 uppercase tracking-wide">
                     <span>Route Progress</span>
@@ -91,7 +83,6 @@ const InteractiveHeroDemo = () => {
                 </div>
             </div>
             
-            {/* Live Stats Row */}
             <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-100">
                 <div className="text-center p-2 rounded-lg bg-slate-50 hover:bg-blue-50 transition-colors">
                     <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Speed</p>
@@ -104,7 +95,6 @@ const InteractiveHeroDemo = () => {
             </div>
        </div>
 
-       {/* Floating Alert Card - Animated Entrances */}
        <div className={`absolute top-10 -left-2 md:left-0 w-64 bg-slate-800 text-white rounded-xl shadow-2xl p-4 z-30 transition-all duration-700 transform border border-slate-700 ${showAlert ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-95 pointer-events-none'}`}>
             <div className="flex items-start gap-3">
                 <div className="bg-amber-500/20 p-2 rounded-lg text-amber-500 shrink-0">
@@ -119,7 +109,6 @@ const InteractiveHeroDemo = () => {
             </div>
        </div>
 
-       {/* Decorative Background Blob */}
        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-blue-100 to-purple-100 rounded-full blur-3xl -z-10 opacity-60"></div>
     </div>
   );
@@ -220,13 +209,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
 
       const adjustedPerBusPrice = perBusPrice - discountPerBus;
       
-      // Hardware Cost Calculation (15% Margin)
-      // Base Cost assumed $150. Margin 15% -> 150 * 1.15 = 172.50
       const hardwareTotal = legacyCount * 172.50;
-      
       const totalAnnual = basePrice + (busCount * adjustedPerBusPrice);
-      
-      // Quote Amount is usually the Annual Subscription + One-Time Hardware
       const grandTotal = totalAnnual + hardwareTotal;
 
       setDiscountDetails({
@@ -245,7 +229,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
           busCount: busCount,
           legacyBusCount: legacyCount,
           tier: quoteForm.tier,
-          amount: grandTotal, // Total value of the deal
+          amount: grandTotal,
           hardwareCost: hardwareTotal,
           status: 'PENDING',
           submittedDate: new Date().toLocaleDateString()
@@ -319,7 +303,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       const subject = `RideSmart Quote #${generatedQuote.id} for ${generatedQuote.districtName}`;
       const body = `Hello ${generatedQuote.contactName},\n\nHere is the generated pricing estimate for ${generatedQuote.districtName}.\n\nPlan: ${generatedQuote.tier}\nFleet Size: ${generatedQuote.busCount}\nTotal Proposal Value: $${generatedQuote.amount.toLocaleString()}\n\nPlease review the details attached or visiting our portal.\n\nBest regards,\nRideSmart AI Team`;
       
-      // Using window.open with _blank to prevent "refused to connect" errors within iframes/previews
       const mailtoUrl = `mailto:${quoteForm.email}?bcc=matt.monjan@infusedu.com&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       window.open(mailtoUrl, '_blank');
   };
@@ -415,20 +398,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
               Replace paper manifests with AI-powered logistics. RideSmart provides real-time RFID tracking, automated parent notifications, and route optimization for modern school districts.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button onClick={() => setShowQuoteModal(true)} className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
-                Request Pricing <ArrowRight size={18} />
+              {/* UPDATED: Open Login Modal instead of direct Admin Login */}
+              <button onClick={() => setShowLoginModal(true)} className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                Launch Dashboard <ArrowRight size={18} />
               </button>
-              <button onClick={() => setShowHardwareModal(true)} className="px-8 py-4 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
-                View Hardware Guide
+              <button onClick={() => setShowQuoteModal(true)} className="px-8 py-4 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                Request Pricing
               </button>
             </div>
             <div className="pt-8 flex items-center gap-6 text-sm text-slate-500 font-medium">
               <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> FERPA Compliant</span>
               <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> SOC2 Certified</span>
+              <span className="flex items-center gap-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">v3.0 Live</span>
             </div>
           </div>
           
-          {/* Hero Graphic / Interactive Demo */}
+          {/* Hero Graphic */}
           <div className="w-full">
              <InteractiveHeroDemo />
           </div>
@@ -594,7 +579,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
                           <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">RS</div>
                               <div>
-                                  <p className="text-sm font-bold text-slate-800">RideSmart Auto-Mailer <span className="font-normal text-slate-500">&lt;noreply@ridesmart.ai&gt;</span></p>
+                                  <p className="text-sm font-bold text-slate-800">RideSmart Auto-Mailer (noreply@ridesmart.ai)</p>
                                   <p className="text-xs text-slate-400">To: {quoteForm.email}</p>
                                   <p className="text-xs text-slate-400">BCC: matt.monjan@infusedu.com</p>
                               </div>
