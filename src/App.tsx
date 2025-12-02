@@ -273,8 +273,10 @@ export default function App() {
       };
       setMaintenanceTickets(prev => [newTicket, ...prev]);
       
+      // Set Bus Status to Maintenance
       setRoutes(prev => prev.map(r => r.id === busId ? { ...r, status: BusStatus.MAINTENANCE, alert: undefined } : r));
       
+      // Log it
       setLogs(prev => [{
           id: `L-MAINT-${Date.now()}`,
           timestamp: new Date().toLocaleTimeString(),
@@ -289,8 +291,10 @@ export default function App() {
   };
 
   const handleResolveTicket = (ticketId: string, busId: string) => {
+      // Set Bus back to IDLE (Ready for route)
       setRoutes(prev => prev.map(r => r.id === busId ? { ...r, status: BusStatus.IDLE } : r));
       
+      // Log it
       setLogs(prev => [{
           id: `L-RESOLVE-${Date.now()}`,
           timestamp: new Date().toLocaleTimeString(),
@@ -317,9 +321,11 @@ export default function App() {
       setRoutes(prev => [...prev, newRoute]);
   };
 
+  // Corrected impersonation logic
   const handleImpersonate = (tenantId: string) => {
-      setUserRole('CLIENT');
-      setActiveTab('dashboard');
+      console.log('Impersonating tenant:', tenantId);
+      setUserRole('CLIENT'); // Set role to CLIENT to show main dashboard
+      setActiveTab('dashboard'); // Reset view
   };
   
   const handleUpdateSystemSettings = (newSettings: SystemSettings) => {
@@ -329,12 +335,11 @@ export default function App() {
       }
   };
 
-  // CONNECT DRIVER APP TO ADMIN DASHBOARD LOGS
   const handleUpdateDriverStatus = (busId: string, status: BusStatus, alertMsg?: string) => {
       // 1. Update Fleet State
       setRoutes(prev => prev.map(r => {
           if (r.id === busId) {
-              return { ...r, status, alert: alertMsg };
+              return { ...r, status, alert: typeof alertMsg === 'string' ? alertMsg : undefined };
           }
           return r;
       }));
@@ -349,7 +354,7 @@ export default function App() {
               message: alertMsg ? `Bus ${route.busNumber} Alert: ${alertMsg}` : `Bus ${route.busNumber} status updated to ${status}`,
               severity: alertMsg ? (alertMsg.includes('EMERGENCY') ? 'critical' : 'warning') : 'info'
           };
-          setLogs(prev => [newLog, ...prev].slice(0, 50)); 
+          setLogs(prev => [newLog, ...prev].slice(0, 50)); // Keep log manageable
       }
   };
 
@@ -394,6 +399,7 @@ export default function App() {
                         />
                    </div>
                </div>
+               {/* Allow Fleet Import in Maintenance Mode too */}
                {showFleetImport && (
                   <FleetImportModal 
                     onImport={handleFleetImport}
@@ -483,6 +489,7 @@ export default function App() {
           <div className="pt-4 mt-4 border-t border-slate-800">
              <p className="text-xs text-slate-500 uppercase tracking-wider mb-2 px-4">Administration</p>
              
+             {/* Feature: Maintenance (Professional+) */}
              {features.maintenance ? (
                 <button 
                     onClick={() => setActiveTab('maintenance')}
@@ -499,6 +506,7 @@ export default function App() {
                 </div>
              )}
 
+             {/* Feature: Budget (Enterprise Only) */}
              {features.budget ? (
                 <button 
                     onClick={() => setActiveTab('budget')}
@@ -515,6 +523,7 @@ export default function App() {
                 </div>
              )}
 
+             {/* Feature: Hardware (Professional+) */}
              {features.hardware ? (
                 <button 
                     onClick={() => setActiveTab('hardware')}
@@ -531,6 +540,7 @@ export default function App() {
                 </div>
              )}
 
+            {/* Feature: Parent Portal (Professional+) */}
             {features.parentPortal ? (
                 <button 
                     onClick={() => setActiveTab('parent')}
@@ -549,6 +559,7 @@ export default function App() {
           </div>
         </nav>
 
+        {/* Subscription Badge */}
         <div className="p-4 border-t border-slate-800">
             <div className="bg-slate-800 rounded-lg p-3">
                 <p className="text-xs text-slate-400 uppercase font-bold mb-1">Active Plan</p>
@@ -582,7 +593,9 @@ export default function App() {
         </div>
       </aside>
 
+      {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-20 shadow-sm relative">
             <div>
                 <h2 className="text-xl font-bold text-slate-800 capitalize flex items-center gap-2">
@@ -599,6 +612,7 @@ export default function App() {
             </div>
             
             <div className="flex items-center gap-4">
+                {/* Search Input */}
                 <div className="relative hidden md:block" ref={searchRef}>
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input 
@@ -608,6 +622,7 @@ export default function App() {
                         placeholder="Search bus, student, or route..." 
                         className="pl-9 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-full text-sm w-64 transition-all outline-none border"
                     />
+                    {/* Search Results */}
                     {searchQuery.trim().length >= 2 && (
                          <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in slide-in-from-top-2 z-50">
                             {searchResults.students.length === 0 && searchResults.routes.length === 0 ? (
@@ -664,6 +679,7 @@ export default function App() {
                     )}
                 </div>
 
+                {/* Notification Bell */}
                 <div className="relative" ref={notificationRef}>
                     <button 
                         onClick={() => setShowNotifications(!showNotifications)}
@@ -717,6 +733,7 @@ export default function App() {
             </div>
         </header>
 
+        {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <div className="max-w-7xl mx-auto space-y-6 h-full">
                 
@@ -746,6 +763,7 @@ export default function App() {
                                 </div>
                             </div>
                             <div className="space-y-6">
+                                {/* Feature: AI Logistics (Enterprise Only) */}
                                 {features.aiLogistics ? (
                                     <AiLogistics routes={routes} logs={logs} tickets={maintenanceTickets} />
                                 ) : (
@@ -770,10 +788,14 @@ export default function App() {
                                 <RfidLogList logs={logs} />
                             </div>
                         </div>
+                        
+                        <div className="mt-6">
+                            <DriverScorecard routes={routes} />
+                        </div>
                     </>
                 )}
 
-                {/* ... Fleet Tab ... */}
+                {/* ... rest of the tabs remain the same but just ensured they are correctly placed in the return */}
                 {activeTab === 'fleet' && (
                     <div className="h-full grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -794,11 +816,96 @@ export default function App() {
                             </div>
                         </div>
 
+                        {/* Fleet List Side Panel */}
                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                             {/* Adding the Driver Safety Scorecard Here */}
-                             <div className="h-full overflow-y-auto custom-scrollbar">
-                                <DriverScorecard routes={routes} />
-                             </div>
+                             <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                <h3 className="font-semibold text-slate-800">Fleet Management</h3>
+                                <button 
+                                    onClick={() => setShowFleetImport(true)}
+                                    className="text-xs bg-slate-800 text-white px-2 py-1.5 rounded hover:bg-slate-700 flex items-center gap-1 transition-colors"
+                                >
+                                    <Upload size={12} /> Import CSV
+                                </button>
+                            </div>
+                            <div className="overflow-y-auto p-4 space-y-3 custom-scrollbar flex-1">
+                                {routes.map(route => (
+                                    <div key={route.id} className={`p-4 border rounded-xl transition-all group relative ${
+                                        route.alert 
+                                            ? 'border-red-200 bg-red-50 shadow-md' 
+                                            : route.status === 'Maintenance'
+                                                ? 'border-orange-200 bg-orange-50'
+                                                : 'border-slate-100 bg-white hover:border-blue-200 hover:shadow-md'
+                                    }`}>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                                                    {route.busNumber}
+                                                    {route.alert && (
+                                                        <span className="relative flex h-3 w-3">
+                                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                                        </span>
+                                                    )}
+                                                </h4>
+                                                <p className="text-xs text-slate-500">{route.name}</p>
+                                                {route.vehicleType && (
+                                                    <span className="text-[10px] text-slate-400 uppercase font-medium tracking-wide border border-slate-200 rounded px-1 py-0.5 mt-1 inline-block">
+                                                        {route.vehicleType}
+                                                    </span>
+                                                )}
+                                            </div>
+                                             <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                route.status === 'On Route' ? 'bg-green-100 text-green-700' :
+                                                route.status === 'Delayed' ? 'bg-red-100 text-red-700' :
+                                                route.status === 'Maintenance' ? 'bg-orange-100 text-orange-700' :
+                                                'bg-slate-100 text-slate-700'
+                                            }`}>
+                                                {route.status}
+                                            </span>
+                                        </div>
+                                        
+                                        {route.alert && (
+                                            <div className="mb-3 bg-white border border-red-100 rounded-lg p-3 shadow-sm animate-in slide-in-from-top-2">
+                                                <div className="flex items-start gap-2">
+                                                    <div className="text-red-500 mt-0.5 shrink-0">
+                                                        <AlertTriangle size={16} /> 
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs text-red-700 font-bold uppercase mb-1">Active Alert</p>
+                                                        <p className="text-sm text-slate-700 mb-2 leading-tight">{route.alert}</p>
+                                                        <button 
+                                                            onClick={() => handleDismissAlert(route.id)}
+                                                            className="w-full py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition-colors flex items-center justify-center gap-1 shadow-sm"
+                                                        >
+                                                            <Check size={12} /> Acknowledge & Dismiss
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {route.status === 'Maintenance' && (
+                                            <div className="mb-3 text-xs text-orange-700 bg-orange-100/50 p-2 rounded border border-orange-200">
+                                                See Maintenance Console for repair details.
+                                            </div>
+                                        )}
+                                        
+                                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-3">
+                                            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                                                <User size={12} />
+                                            </div>
+                                            {route.driver}
+                                        </div>
+
+                                        <button 
+                                            onClick={() => setEditingRoute(route)}
+                                            className="w-full py-2 border border-slate-200 bg-white rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <Pencil size={14} /> Edit Details
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -891,6 +998,7 @@ export default function App() {
         </div>
       </main>
       
+      {/* Modals */}
       {selectedStudent && (
           <StudentDetailsModal 
             student={selectedStudent} 
