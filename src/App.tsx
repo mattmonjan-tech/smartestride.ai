@@ -1,32 +1,11 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  LayoutDashboard, 
-  Map as MapIcon, 
-  Users, 
-  Bell, 
-  Settings, 
-  Bus, 
-  LogOut, 
-  Search, 
-  ChevronRight, 
-  Pencil, 
-  User, 
-  GitMerge, 
-  AlertTriangle, 
-  Check, 
-  Cable, 
-  Upload, 
-  X, 
-  Shield, 
-  Calendar, 
-  Lock, 
-  DollarSign, 
-  Wrench, 
-  Tag 
+  LayoutDashboard, Map as MapIcon, Users, Bell, Settings, Bus, LogOut, Search, ChevronRight, Pencil, User, GitMerge, AlertTriangle, Check, Cable, Upload, X, Shield, Calendar, Lock, DollarSign, Wrench, Tag 
 } from 'lucide-react';
 import DashboardMetrics from './components/DashboardMetrics';
 import SimulatedMap from './components/SimulatedMap';
+import LiveMap from './components/LiveMap'; // UPDATED
+import LiveSearch from './components/LiveSearch'; // UPDATED
 import AiLogistics from './components/AiLogistics';
 import StudentDetailsModal from './components/StudentDetailsModal';
 import EditRouteModal from './components/EditRouteModal';
@@ -41,9 +20,10 @@ import BudgetPlanner from './components/BudgetPlanner';
 import MaintenanceConsole from './components/MaintenanceConsole';
 import TelematicsIntegration from './components/TelematicsIntegration';
 import DriverApp from './components/DriverApp';
-import RescueDeploy from './components/RescueDeploy'; // Changed import
+import RescueDeploy from './components/RescueDeploy';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import MaintenanceModal from './components/MaintenanceModal';
+import DriverScorecard from './components/DriverScorecard';
 
 import { INITIAL_ROUTES, INITIAL_STUDENTS, INITIAL_LOGS, MOCK_QUOTES, INITIAL_BUDGET_DATA, INITIAL_TICKETS } from './constants';
 import { BusRoute, Student, LogEntry, StudentStatus, BusStatus, SubscriptionTier, QuoteRequest, SystemSettings, MaintenanceTicket } from './types';
@@ -81,6 +61,7 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<'CLIENT' | 'ADMIN' | 'DRIVER' | 'MAINTENANCE'>('CLIENT');
   const [tier, setTier] = useState<SubscriptionTier>('ENTERPRISE');
+  const [activeTenantId, setActiveTenantId] = useState<string | null>(null);
 
   // Super Admin State (Lifted up with Persistence)
   const [adminQuotes, setAdminQuotes] = useState<QuoteRequest[]>(() => {
@@ -99,11 +80,10 @@ export default function App() {
       if (systemSettings.supabaseUrl && systemSettings.supabaseKey) {
           initSupabase(systemSettings.supabaseUrl, systemSettings.supabaseKey);
       }
-  }, [systemSettings.supabaseUrl, systemSettings.supabaseKey]); // Added dependencies to ensure re-init on change
+  }, [systemSettings.supabaseUrl, systemSettings.supabaseKey]); 
 
   // Tenants State
   const [tenants, setTenants] = useState(() => {
-      // Mock logic for tenants persistence could go here
       return []; 
   });
 
@@ -121,11 +101,9 @@ export default function App() {
   const [showFleetImport, setShowFleetImport] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   
-  // Search & Notification State
-  const [searchQuery, setSearchQuery] = useState('');
+  // Notification State (Search moved to LiveSearch component)
   const [showNotifications, setShowNotifications] = useState(false);
-  const [searchResults, setSearchResults] = useState<{ students: Student[], routes: BusRoute[] }>({ students: [], routes: [] });
-
+  
   // Mock State
   const [routes, setRoutes] = useState<BusRoute[]>(INITIAL_ROUTES);
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
@@ -133,7 +111,6 @@ export default function App() {
   const [maintenanceTickets, setMaintenanceTickets] = useState<MaintenanceTicket[]>(INITIAL_TICKETS);
 
   // Refs for click-outside handling
-  const searchRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
 
   // Feature Flags based on Provisioned Tier
@@ -152,47 +129,17 @@ export default function App() {
       setTier(simulatedTier);
       setIsLoggedIn(true);
       setActiveTab('dashboard');
+      if (role !== 'ADMIN') {
+          setActiveTenantId('TUSD-882'); 
+      }
   };
 
   const handleNewQuote = (newQuote: QuoteRequest) => {
-      // 1. Update Super Admin State
       setAdminQuotes(prev => [newQuote, ...prev]);
-      
-      // 2. Simulate Email Notification to Matt Monjan
-      console.log(`
-        [EMAIL SENT]
-        To: matt.monjan@infusedu.com
-        Subject: New Quote Request - ${newQuote.districtName}
-        Body: A new quote for ${newQuote.amount.toLocaleString()} (Tier: ${newQuote.tier}) was generated for ${newQuote.contactName}.
-        Check Dashboard.
-      `);
   };
-
-  // Effects
-  useEffect(() => {
-    if (searchQuery.trim().length < 2) {
-        setSearchResults({ students: [], routes: [] });
-        return;
-    }
-    const lowerQuery = searchQuery.toLowerCase();
-    const matchedStudents = students.filter(s => 
-        s.name.toLowerCase().includes(lowerQuery) || 
-        s.id.toLowerCase().includes(lowerQuery) ||
-        s.school.toLowerCase().includes(lowerQuery)
-    ).slice(0, 5);
-    const matchedRoutes = routes.filter(r => 
-        r.name.toLowerCase().includes(lowerQuery) || 
-        r.busNumber.toLowerCase().includes(lowerQuery) || 
-        r.driver.toLowerCase().includes(lowerQuery)
-    ).slice(0, 5);
-    setSearchResults({ students: matchedStudents, routes: matchedRoutes });
-  }, [searchQuery, students, routes]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setSearchQuery(''); 
-      }
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
       }
@@ -205,7 +152,7 @@ export default function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       setRoutes(currentRoutes => currentRoutes.map(bus => {
-        if (bus.status === BusStatus.MAINTENANCE) return bus; // Don't move buses in maintenance
+        if (bus.status === BusStatus.MAINTENANCE) return bus; 
 
         let newCoords = bus.coordinates;
         if (bus.status === BusStatus.ON_ROUTE || bus.status === BusStatus.DELAYED) {
@@ -304,11 +251,7 @@ export default function App() {
           notes: []
       };
       setMaintenanceTickets(prev => [newTicket, ...prev]);
-      
-      // Set Bus Status to Maintenance
       setRoutes(prev => prev.map(r => r.id === busId ? { ...r, status: BusStatus.MAINTENANCE, alert: undefined } : r));
-      
-      // Log it
       setLogs(prev => [{
           id: `L-MAINT-${Date.now()}`,
           timestamp: new Date().toLocaleTimeString(),
@@ -323,10 +266,7 @@ export default function App() {
   };
 
   const handleResolveTicket = (ticketId: string, busId: string) => {
-      // Set Bus back to IDLE (Ready for route)
       setRoutes(prev => prev.map(r => r.id === busId ? { ...r, status: BusStatus.IDLE } : r));
-      
-      // Log it
       setLogs(prev => [{
           id: `L-RESOLVE-${Date.now()}`,
           timestamp: new Date().toLocaleTimeString(),
@@ -354,7 +294,6 @@ export default function App() {
   };
 
   const handleImpersonate = (tenantId: string) => {
-      // Mock Impersonation: Switch role to CLIENT and pretend we loaded their data
       setUserRole('CLIENT');
       setActiveTab('dashboard');
   };
@@ -366,13 +305,25 @@ export default function App() {
       }
   };
 
-  const handleUpdateDriverStatus = (busId: string, status: BusStatus, alert?: string) => {
+  const handleUpdateDriverStatus = (busId: string, status: BusStatus, alertMsg?: string) => {
       setRoutes(prev => prev.map(r => {
           if (r.id === busId) {
-              return { ...r, status, alert };
+              return { ...r, status, alert: typeof alertMsg === 'string' ? alertMsg : undefined };
           }
           return r;
       }));
+
+      const route = routes.find(r => r.id === busId);
+      if (route) {
+          const newLog: LogEntry = {
+              id: `L-DRIVER-${Date.now()}`,
+              timestamp: new Date().toLocaleTimeString(),
+              type: alertMsg ? 'ALERT' : 'SYSTEM',
+              message: alertMsg ? `Bus ${route.busNumber} Alert: ${alertMsg}` : `Bus ${route.busNumber} status updated to ${status}`,
+              severity: alertMsg ? (alertMsg.includes('EMERGENCY') ? 'critical' : 'warning') : 'info'
+          };
+          setLogs(prev => [newLog, ...prev].slice(0, 50)); 
+      }
   };
 
   if (!isLoggedIn) {
@@ -416,7 +367,6 @@ export default function App() {
                         />
                    </div>
                </div>
-               {/* Allow Fleet Import in Maintenance Mode too */}
                {showFleetImport && (
                   <FleetImportModal 
                     onImport={handleFleetImport}
@@ -437,7 +387,6 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-slate-100 text-slate-900 font-sans animate-in fade-in duration-300">
-      {/* Sidebar */}
       <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 transition-all duration-300">
         <div className="p-6 flex items-center gap-3 border-b border-slate-800">
           <div className="bg-yellow-500 p-2 rounded-lg text-slate-900">
@@ -471,7 +420,6 @@ export default function App() {
             <span className="font-medium">Students</span>
           </button>
           
-          {/* Feature: Special Events (Enterprise Only) */}
           {features.events ? (
             <button 
                 onClick={() => setActiveTab('events')}
@@ -488,7 +436,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Feature: Optimizer (Enterprise Only) */}
           {features.optimizer ? (
             <button 
                 onClick={() => setActiveTab('optimizer')}
@@ -508,7 +455,6 @@ export default function App() {
           <div className="pt-4 mt-4 border-t border-slate-800">
              <p className="text-xs text-slate-500 uppercase tracking-wider mb-2 px-4">Administration</p>
              
-             {/* Feature: Maintenance (Professional+) */}
              {features.maintenance ? (
                 <button 
                     onClick={() => setActiveTab('maintenance')}
@@ -525,7 +471,6 @@ export default function App() {
                 </div>
              )}
 
-             {/* Feature: Budget (Enterprise Only) */}
              {features.budget ? (
                 <button 
                     onClick={() => setActiveTab('budget')}
@@ -542,7 +487,6 @@ export default function App() {
                 </div>
              )}
 
-             {/* Feature: Hardware (Professional+) */}
              {features.hardware ? (
                 <button 
                     onClick={() => setActiveTab('hardware')}
@@ -559,7 +503,6 @@ export default function App() {
                 </div>
              )}
 
-            {/* Feature: Parent Portal (Professional+) */}
             {features.parentPortal ? (
                 <button 
                     onClick={() => setActiveTab('parent')}
@@ -578,7 +521,6 @@ export default function App() {
           </div>
         </nav>
 
-        {/* Subscription Badge */}
         <div className="p-4 border-t border-slate-800">
             <div className="bg-slate-800 rounded-lg p-3">
                 <p className="text-xs text-slate-400 uppercase font-bold mb-1">Active Plan</p>
@@ -612,9 +554,7 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-20 shadow-sm relative">
             <div>
                 <h2 className="text-xl font-bold text-slate-800 capitalize flex items-center gap-2">
@@ -631,74 +571,20 @@ export default function App() {
             </div>
             
             <div className="flex items-center gap-4">
-                {/* Search Input */}
-                <div className="relative hidden md:block" ref={searchRef}>
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input 
-                        type="text" 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search bus, student, or route..." 
-                        className="pl-9 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-full text-sm w-64 transition-all outline-none border"
-                    />
-                    {/* Search Results */}
-                    {searchQuery.trim().length >= 2 && (
-                         <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in slide-in-from-top-2 z-50">
-                            {searchResults.students.length === 0 && searchResults.routes.length === 0 ? (
-                                <div className="p-4 text-center text-slate-500 text-sm">No matches found.</div>
-                            ) : (
-                                <div>
-                                    {searchResults.students.length > 0 && (
-                                        <div>
-                                            <div className="px-4 py-2 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">Students</div>
-                                            {searchResults.students.map(s => (
-                                                <div 
-                                                    key={s.id}
-                                                    onClick={() => {
-                                                        setActiveTab('students');
-                                                        setSelectedStudent(s);
-                                                        setSearchQuery('');
-                                                    }}
-                                                    className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0 flex items-center gap-3"
-                                                >
-                                                    <div className="bg-blue-100 text-blue-600 p-2 rounded-full"><User size={14}/></div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-800">{s.name}</p>
-                                                        <p className="text-xs text-slate-400">{s.school}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {searchResults.routes.length > 0 && (
-                                        <div>
-                                            <div className="px-4 py-2 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">Routes</div>
-                                            {searchResults.routes.map(r => (
-                                                <div 
-                                                    key={r.id}
-                                                    onClick={() => {
-                                                        setActiveTab('fleet');
-                                                        setEditingRoute(r);
-                                                        setSearchQuery('');
-                                                    }}
-                                                    className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0 flex items-center gap-3"
-                                                >
-                                                    <div className="bg-orange-100 text-orange-600 p-2 rounded-full"><Bus size={14}/></div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-800">{r.busNumber} - {r.name}</p>
-                                                        <p className="text-xs text-slate-400">{r.driver}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                         </div>
-                    )}
-                </div>
+                {/* UPDATED LIVE SEARCH */}
+                <LiveSearch 
+                    students={students}
+                    routes={routes}
+                    onSelectStudent={(s) => {
+                        setActiveTab('students');
+                        setSelectedStudent(s);
+                    }}
+                    onSelectRoute={(r) => {
+                        setActiveTab('fleet');
+                        setEditingRoute(r);
+                    }}
+                />
 
-                {/* Notification Bell */}
                 <div className="relative" ref={notificationRef}>
                     <button 
                         onClick={() => setShowNotifications(!showNotifications)}
@@ -752,7 +638,6 @@ export default function App() {
             </div>
         </header>
 
-        {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <div className="max-w-7xl mx-auto space-y-6 h-full">
                 
@@ -774,7 +659,8 @@ export default function App() {
                                     </button>
                                 </div>
                                 <div className="flex-1 relative rounded-lg overflow-hidden border border-slate-100">
-                                    <SimulatedMap 
+                                    {/* UPDATED LIVE MAP */}
+                                    <LiveMap 
                                         routes={routes} 
                                         onDismissAlert={handleDismissAlert} 
                                         onReportIssue={handleReportMechanicalIssue}
@@ -782,7 +668,6 @@ export default function App() {
                                 </div>
                             </div>
                             <div className="space-y-6">
-                                {/* Feature: AI Logistics (Enterprise Only) */}
                                 {features.aiLogistics ? (
                                     <AiLogistics routes={routes} logs={logs} tickets={maintenanceTickets} />
                                 ) : (
@@ -807,10 +692,13 @@ export default function App() {
                                 <RfidLogList logs={logs} />
                             </div>
                         </div>
+                        
+                        <div className="mt-6">
+                            <DriverScorecard routes={routes} />
+                        </div>
                     </>
                 )}
 
-                {/* ... rest of the tabs remain the same but just ensured they are correctly placed in the return */}
                 {activeTab === 'fleet' && (
                     <div className="h-full grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -823,7 +711,8 @@ export default function App() {
                                  </div>
                             </div>
                             <div className="flex-1 min-h-[400px] p-4">
-                                    <SimulatedMap 
+                                    {/* UPDATED LIVE MAP */}
+                                    <LiveMap 
                                         routes={routes} 
                                         onDismissAlert={handleDismissAlert} 
                                         onReportIssue={handleReportMechanicalIssue}
@@ -831,7 +720,6 @@ export default function App() {
                             </div>
                         </div>
 
-                        {/* Fleet List Side Panel */}
                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                              <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                                 <h3 className="font-semibold text-slate-800">Fleet Management</h3>
@@ -1013,7 +901,6 @@ export default function App() {
         </div>
       </main>
       
-      {/* Modals */}
       {selectedStudent && (
           <StudentDetailsModal 
             student={selectedStudent} 
