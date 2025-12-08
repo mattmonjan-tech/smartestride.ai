@@ -69,30 +69,25 @@ const RfidLogList: React.FC<{ logs: LogEntry[] }> = ({ logs }) => (
 );
 
 export default function App() {
-  // Auth State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<'CLIENT' | 'ADMIN' | 'DRIVER' | 'MAINTENANCE'>('CLIENT');
   const [tier, setTier] = useState<SubscriptionTier>('ENTERPRISE');
   const [activeTenantId, setActiveTenantId] = useState<string | null>(null);
 
-  // Super Admin State (Lifted up with Persistence)
   const [adminQuotes, setAdminQuotes] = useState<QuoteRequest[]>(() => 
     safeJSONParse('rideSmartQuotes', MOCK_QUOTES)
   );
 
-  // System Settings State
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => 
     safeJSONParse('rideSmartSettings', { mapProvider: 'SIMULATED' })
   );
 
-  // Initialize Supabase on load if settings exist, and whenever settings change
   useEffect(() => {
       if (systemSettings.supabaseUrl && systemSettings.supabaseKey) {
           initSupabase(systemSettings.supabaseUrl, systemSettings.supabaseKey);
       }
   }, [systemSettings.supabaseUrl, systemSettings.supabaseKey]); 
 
-  // Tenants State
   const [tenants, setTenants] = useState(() => {
       return []; 
   });
@@ -111,19 +106,15 @@ export default function App() {
   const [showFleetImport, setShowFleetImport] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   
-  // Notification State
   const [showNotifications, setShowNotifications] = useState(false);
   
-  // Mock State
   const [routes, setRoutes] = useState<BusRoute[]>(INITIAL_ROUTES);
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
   const [logs, setLogs] = useState<LogEntry[]>(INITIAL_LOGS);
   const [maintenanceTickets, setMaintenanceTickets] = useState<MaintenanceTicket[]>(INITIAL_TICKETS);
 
-  // Refs for click-outside handling
   const notificationRef = useRef<HTMLDivElement>(null);
 
-  // Feature Flags based on Provisioned Tier
   const features = {
     aiLogistics: tier === 'ENTERPRISE',
     optimizer: tier === 'ENTERPRISE',
@@ -158,7 +149,6 @@ export default function App() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fleet Simulation
   useEffect(() => {
     const interval = setInterval(() => {
       setRoutes(currentRoutes => currentRoutes.map(bus => {
@@ -186,7 +176,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Student RFID Simulation
   useEffect(() => {
     const interval = setInterval(() => {
       setStudents(currentStudents => {
@@ -911,6 +900,7 @@ export default function App() {
         </div>
       </main>
       
+      {/* Modals */}
       {selectedStudent && (
           <StudentDetailsModal 
             student={selectedStudent} 
