@@ -105,6 +105,8 @@ export default function App() {
   const [editingRoute, setEditingRoute] = useState<BusRoute | null>(null);
   const [showFleetImport, setShowFleetImport] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [showMissionControl, setShowMissionControl] = useState(false);
+  const [missionControlTab, setMissionControlTab] = useState<'SMART' | 'DUMB' | 'CLOUD' | 'LIVE'>('LIVE');
   
   const [showNotifications, setShowNotifications] = useState(false);
   
@@ -637,6 +639,13 @@ export default function App() {
             </div>
         </header>
 
+        {/* Scrollable Content Area */}
+        {showMissionControl && (
+            <div className="absolute inset-0 z-50">
+                <RescueDeploy initialTab={missionControlTab} onClose={() => setShowMissionControl(false)} />
+            </div>
+        )}
+
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <div className="max-w-7xl mx-auto space-y-6 h-full">
                 
@@ -936,4 +945,39 @@ export default function App() {
 
     </div>
   );
+}
+--- START OF FILE package.json ---
+
+{
+  "name": "ridesmart-app",
+  "private": true,
+  "version": "66.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/genai": "*",
+    "@supabase/supabase-js": "^2.39.0",
+    "lucide-react": "^0.294.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.10.3",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8",
+    "@types/file-saver": "^2.0.7",
+    "@types/node": "^20.10.0"
+  }
 }
