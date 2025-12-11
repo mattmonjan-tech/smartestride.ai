@@ -31,10 +31,10 @@ export interface Student {
 }
 
 export interface BusHealth {
-    status: 'HEALTHY' | 'WARNING' | 'CRITICAL';
-    batteryVoltage: number;
-    tirePressure: number; // PSI
-    oilLevel: number; // percentage
+  status: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+  batteryVoltage: number;
+  tirePressure: number; // PSI
+  oilLevel: number; // percentage
 }
 
 export interface BusRoute {
@@ -51,7 +51,7 @@ export interface BusRoute {
   alert?: string;
   vehicleType: VehicleType;
   health?: BusHealth;
-  
+
   // Detailed Vehicle Info
   vin?: string;
   licensePlate?: string;
@@ -148,6 +148,7 @@ export interface QuoteRequest {
   studentCount: number;
   busCount: number;
   legacyBusCount?: number;
+  newBusCount?: number;
   tier: SubscriptionTier;
   amount: number;
   hardwareCost?: number;
@@ -183,23 +184,23 @@ export interface YearlyStats {
   topDestination: string;
 }
 export interface PricingConfig {
-    basePrice: number;
-    perBusPrice: number;
+  basePrice: number;
+  perBusPrice: number;
 }
 export interface SystemSettings {
-    mapProvider: 'SIMULATED' | 'GOOGLE_MAPS';
-    googleMapsApiKey?: string;
-    supabaseUrl?: string;
-    supabaseKey?: string;
+  mapProvider: 'SIMULATED' | 'GOOGLE_MAPS';
+  googleMapsApiKey?: string;
+  supabaseUrl?: string;
+  supabaseKey?: string;
 }
 
-export type BudgetCategory = 
-  | 'Fuel/Gas' 
-  | 'Staff Salaries' 
-  | 'Maintenance' 
-  | 'Leases/Purchases' 
-  | 'Insurance' 
-  | 'Technology' 
+export type BudgetCategory =
+  | 'Fuel/Gas'
+  | 'Staff Salaries'
+  | 'Maintenance'
+  | 'Leases/Purchases'
+  | 'Insurance'
+  | 'Technology'
   | 'Facilities';
 
 export interface BudgetEntry {
