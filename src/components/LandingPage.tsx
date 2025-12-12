@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bus, CheckCircle2, ArrowRight, Upload, X, FileText, Tablet, Scan, Cable, Check, Zap, Navigation, Printer, Mail, Map, Brain, DollarSign, Wrench, Lock, LayoutDashboard, User, AlertCircle, Shield } from 'lucide-react';
-import { RECOMMENDED_HARDWARE } from '../constants';
+import { PRICING_MAP } from '../constants';
 import { SubscriptionTier, QuoteRequest } from '../types';
 import { InteractiveHeroDemo, FeaturesSection, PricingSection, FooterSection } from './MarketingComponents';
 
@@ -44,6 +44,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
     });
     const [poSubmitted, setPoSubmitted] = useState(false);
 
+    // Reset generated quote and related state when tier changes
+    useEffect(() => {
+        setGeneratedQuote(null);
+        setHardwareCost(0);
+        setDiscountDetails({ perBus: 0, totalDiscount: 0 });
+    }, [quoteForm.tier]);
+
     const handleQuoteSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const newBusCount = parseInt(quoteForm.newBuses) || 0;
@@ -51,14 +58,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
         const busCount = newBusCount + oldBusCount;
         const legacyCount = oldBusCount;
 
-        let basePrice = 0;
-        let perBusPrice = 0;
-
-        switch (quoteForm.tier) {
-            case 'BASIC': basePrice = 3000; perBusPrice = 150; break;
-            case 'PROFESSIONAL': basePrice = 5000; perBusPrice = 310; break;
-            case 'ENTERPRISE': basePrice = 10000; perBusPrice = 460; break;
-        }
+        // Retrieve tier-specific pricing configuration
+        const config = PRICING_MAP[quoteForm.tier];
+        const basePrice = config.basePrice;
+        const perBusPrice = config.perBusPrice;
 
         let discountPerBus = 0;
         if (busCount > 1000) discountPerBus = 5.00;
@@ -68,12 +71,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
         else if (busCount > 100) discountPerBus = 2.50;
 
         const adjustedPerBusPrice = perBusPrice - discountPerBus;
-        const hardwareTotal = legacyCount * 200; // Updated hardware kit price
+        const hardwareTotal = legacyCount * config.hardwareKitPrice; // Updated hardware kit price
         const totalAnnual = basePrice + (busCount * adjustedPerBusPrice);
-        const grandTotal = totalAnnual + hardwareTotal + 3000; // Added one‑time setup fee
+        const grandTotal = totalAnnual + hardwareTotal + config.setupFee; // Added one‑time setup fee
 
         setDiscountDetails({ perBus: discountPerBus, totalDiscount: busCount * discountPerBus });
         setHardwareCost(hardwareTotal);
+
 
         const newQuote: QuoteRequest = {
             id: `Q-${Date.now()}`,
@@ -285,7 +289,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
                                                 <Cable size={16} className="text-orange-600" />
                                                 <input required type="number" placeholder="0" className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value={quoteForm.oldBuses} onChange={e => setQuoteForm({ ...quoteForm, oldBuses: e.target.value })} />
                                             </div>
-                                            <p className="text-[10px] text-orange-500 mt-1">+$172.50/bus setup</p>
+                                            <p className="text-[10px] text-orange-500 mt-1">+$200 per legacy bus (hardware kit)</p>
                                         </div>
                                     </div>
                                     <button type="submit" className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-lg mt-2">Generate Instant Quote</button>
