@@ -355,8 +355,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
                                                             ${(generatedQuote.hardwareCost || 0).toLocaleString()}
                                                         </td>
                                                     </tr>
-                                                )
-                                                    {generatedQuote.setupFee && generatedQuote.setupFee > 0 && (
+                                                )}
+                                                {generatedQuote.setupFee && generatedQuote.setupFee > 0 && (
                                                     <tr>
                                                         <td className="py-4">
                                                             <p className="font-bold text-slate-800">One‑Time Setup Fee</p>
@@ -368,7 +368,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
                                                             ${generatedQuote.setupFee.toLocaleString()}
                                                         </td>
                                                     </tr>
-                                                )
+                                                )}
                                             </tbody>
                                         </table>
 
